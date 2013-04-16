@@ -384,7 +384,7 @@ module Grape
       run_filters after_validations
 
       response_text = @block ? @block.call(self) : nil
-      run_filters afters
+      run_after_filters afters, response_text
       cookies.write(header)
 
       [status, header, [body || response_text]]
@@ -450,6 +450,12 @@ module Grape
     def merged_setting(key)
       settings.stack.inject({}) do |merged, frame|
         merged.merge(frame[key] || {})
+      end
+    end
+
+    def run_after_filters(filters, response_text)
+      (filters || []).each do |filter|
+        instance_exec response_text, &filter
       end
     end
 
